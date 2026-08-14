@@ -1,6 +1,11 @@
 # Vinamilk GBP Demo
 
-Demo UI/UX tĩnh cho hệ thống quản lý **Google Business Profile** của Vinamilk (~560 cửa hàng). Không gọi backend, không cần `.env`.
+Demo UI/UX tĩnh cho hệ thống quản lý **Google Business Profile** của Vinamilk (~560 cửa hàng).
+
+- GitHub: https://github.com/maunghithienha07357-web/vinamilk-demo
+- Production: https://vinamilk-demo.vercel.app
+
+Supabase dùng project cũ. Env trên Vercel tự thêm sau (không commit `.env.local`).
 
 ## Vai trò
 
@@ -44,21 +49,13 @@ Nếu GitHub báo lỗi auth: tạo PAT trên account GitHub mới, đặt biế
 
 ## Deploy GitHub + Vercel
 
-1. Tạo repo GitHub mới (ví dụ `vinamilk-demo`).
-2. Trong thư mục này:
+Đã gắn:
 
-```bash
-git init
-git add .
-git commit -m "Initial commit: Vinamilk GBP demo"
-git branch -M main
-git remote add origin https://github.com/<username>/<repo>.git
-git push -u origin main
-```
+- Repo: https://github.com/maunghithienha07357-web/vinamilk-demo
+- Vercel team: `demo-vinamilk` → project `vinamilk-demo`
+- Site: https://vinamilk-demo.vercel.app
 
-3. Vào [Vercel](https://vercel.com) → **Add New Project** → Import repo vừa tạo.
-4. Framework Preset: **Next.js**. Không cần Environment Variables.
-5. Deploy.
+Mỗi commit lên `main` sẽ auto-deploy. Thêm biến môi trường trên Vercel Dashboard khi cần (Supabase cũ, v.v.).
 
 ## Stack
 
