@@ -1,5 +1,11 @@
 import { createServiceClient } from "@/lib/supabase/admin";
-import { decryptSecret } from "@/lib/crypto/secretCrypto";
+import { decryptSecret, encryptSecret, keyHint } from "@/lib/crypto/secretCrypto";
+import {
+  getProvider,
+  isAiProvider,
+  isModelForProvider,
+  type AiProviderId,
+} from "@/lib/ai/providers";
 import type { StoreSnapshot } from "@/lib/ai/roleContext";
 
 export type AiConfigRow = {
@@ -8,6 +14,10 @@ export type AiConfigRow = {
   model: string;
   api_key_cipher: string | null;
   key_hint: string | null;
+  groq_key_cipher: string | null;
+  groq_key_hint: string | null;
+  gemini_key_cipher: string | null;
+  gemini_key_hint: string | null;
   temperature: number;
   updated_at: string;
 };
@@ -28,11 +38,32 @@ export type AiChatLogRow = {
   created_at: string;
 };
 
+const CONFIG_SELECT =
+  "id, provider, model, api_key_cipher, key_hint, groq_key_cipher, groq_key_hint, gemini_key_cipher, gemini_key_hint, temperature, updated_at";
+
+export function activeProvider(row: AiConfigRow): AiProviderId {
+  return isAiProvider(row.provider) ? row.provider : "groq";
+}
+
+export function cipherFor(row: AiConfigRow, provider: AiProviderId): string | null {
+  if (provider === "gemini") {
+    return row.gemini_key_cipher ?? (row.provider === "gemini" ? row.api_key_cipher : null);
+  }
+  return row.groq_key_cipher ?? (row.provider === "groq" ? row.api_key_cipher : null);
+}
+
+export function hintFor(row: AiConfigRow, provider: AiProviderId): string | null {
+  if (provider === "gemini") {
+    return row.gemini_key_hint ?? (row.provider === "gemini" ? row.key_hint : null);
+  }
+  return row.groq_key_hint ?? (row.provider === "groq" ? row.key_hint : null);
+}
+
 export async function loadAiConfig(): Promise<AiConfigRow | null> {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("vinamilk_ai_config")
-    .select("id, provider, model, api_key_cipher, key_hint, temperature, updated_at")
+    .select(CONFIG_SELECT)
     .eq("id", "default")
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -40,38 +71,82 @@ export async function loadAiConfig(): Promise<AiConfigRow | null> {
 }
 
 export async function saveAiConfig(patch: {
+  provider?: AiProviderId;
   model?: string;
-  api_key_cipher?: string | null;
-  key_hint?: string | null;
+  apiKey?: string;
   temperature?: number;
 }): Promise<AiConfigRow> {
   const existing = await loadAiConfig();
+  const provider = patch.provider ?? (existing ? activeProvider(existing) : "groq");
+  const meta = getProvider(provider);
+  let model = patch.model ?? existing?.model ?? meta.defaultModel;
+  if (!isModelForProvider(provider, model)) {
+    model = meta.defaultModel;
+  }
+
+  let groqCipher = existing?.groq_key_cipher ?? null;
+  let groqHint = existing?.groq_key_hint ?? null;
+  let geminiCipher = existing?.gemini_key_cipher ?? null;
+  let geminiHint = existing?.gemini_key_hint ?? null;
+
+  if (!groqCipher && existing?.provider === "groq") {
+    groqCipher = existing.api_key_cipher;
+    groqHint = existing.key_hint;
+  }
+  if (!geminiCipher && existing?.provider === "gemini") {
+    geminiCipher = existing.api_key_cipher;
+    geminiHint = existing.key_hint;
+  }
+
+  if (patch.apiKey) {
+    const cipher = encryptSecret(patch.apiKey);
+    const hint = keyHint(patch.apiKey);
+    if (provider === "gemini") {
+      geminiCipher = cipher;
+      geminiHint = hint;
+    } else {
+      groqCipher = cipher;
+      groqHint = hint;
+    }
+  }
+
+  const activeCipher = provider === "gemini" ? geminiCipher : groqCipher;
+  const activeHint = provider === "gemini" ? geminiHint : groqHint;
+
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("vinamilk_ai_config")
     .upsert(
       {
         id: "default",
-        provider: "groq",
-        model: patch.model ?? existing?.model ?? "llama-3.3-70b-versatile",
-        api_key_cipher:
-          patch.api_key_cipher !== undefined ? patch.api_key_cipher : existing?.api_key_cipher,
-        key_hint: patch.key_hint !== undefined ? patch.key_hint : existing?.key_hint,
+        provider,
+        model,
+        api_key_cipher: activeCipher,
+        key_hint: activeHint,
+        groq_key_cipher: groqCipher,
+        groq_key_hint: groqHint,
+        gemini_key_cipher: geminiCipher,
+        gemini_key_hint: geminiHint,
         temperature: patch.temperature ?? existing?.temperature ?? 0.3,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" },
     )
-    .select("id, provider, model, api_key_cipher, key_hint, temperature, updated_at")
+    .select(CONFIG_SELECT)
     .single();
   if (error) throw new Error(error.message);
   return data as AiConfigRow;
 }
 
-export async function decryptStoredApiKey(): Promise<string | null> {
+export async function decryptStoredApiKey(
+  provider?: AiProviderId,
+): Promise<string | null> {
   const config = await loadAiConfig();
-  if (!config?.api_key_cipher) return null;
-  return decryptSecret(config.api_key_cipher);
+  if (!config) return null;
+  const id = provider ?? activeProvider(config);
+  const cipher = cipherFor(config, id);
+  if (!cipher) return null;
+  return decryptSecret(cipher);
 }
 
 export async function loadSnapshot(): Promise<AiSnapshotRow | null> {

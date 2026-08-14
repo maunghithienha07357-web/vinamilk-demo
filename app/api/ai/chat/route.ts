@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { decryptSecret } from "@/lib/crypto/secretCrypto";
-import { GroqError, streamGroqChat } from "@/lib/ai/groq";
+import { getProvider } from "@/lib/ai/providers";
+import { AiProviderError, streamProviderChat } from "@/lib/ai/openaiCompat";
 import { buildRoleContext, isDemoRole } from "@/lib/ai/roleContext";
-import { insertChatLog, loadAiConfig, loadStoresForChat } from "@/lib/ai/store";
+import {
+  activeProvider,
+  cipherFor,
+  insertChatLog,
+  loadAiConfig,
+  loadStoresForChat,
+} from "@/lib/ai/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,10 +46,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 
-  if (!config?.api_key_cipher) {
+  const provider = config ? activeProvider(config) : "groq";
+  const label = getProvider(provider).label;
+  const cipher = config ? cipherFor(config, provider) : null;
+
+  if (!cipher) {
     return NextResponse.json(
       {
-        error: "Chat AI chưa sẵn sàng. Admin cần nhập API key Groq trên trang Cấu hình AI.",
+        error: `Chat AI chưa sẵn sàng. Admin cần nhập API key ${label} trên trang Cấu hình AI.`,
         code: "NOT_CONFIGURED",
       },
       { status: 400 },
@@ -51,7 +62,7 @@ export async function POST(req: Request) {
 
   let apiKey: string;
   try {
-    apiKey = decryptSecret(config.api_key_cipher);
+    apiKey = decryptSecret(cipher);
   } catch {
     return NextResponse.json(
       { error: "Không giải mã được API key. Kiểm tra VINAMILK_AI_ENC_KEY trên server." },
@@ -80,15 +91,16 @@ export async function POST(req: Request) {
   const { system } = buildRoleContext(body.role, stores);
   const encoder = new TextEncoder();
   const started = Date.now();
-  const model = config.model;
+  const model = config!.model;
   const role = body.role;
-  const temperature = Number(config.temperature ?? 0.3);
+  const temperature = Number(config!.temperature ?? 0.3);
 
   const readable = new ReadableStream({
     async start(controller) {
       let answer = "";
       try {
-        for await (const token of streamGroqChat({
+        for await (const token of streamProviderChat({
+          provider,
           apiKey,
           model,
           system,
@@ -109,11 +121,11 @@ export async function POST(req: Request) {
         });
       } catch (err) {
         const message =
-          err instanceof GroqError
+          err instanceof AiProviderError
             ? err.message
             : err instanceof Error
               ? err.message
-              : "Lỗi khi gọi Groq";
+              : `Lỗi khi gọi ${label}`;
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: message })}\n\n`));
         controller.close();
       }

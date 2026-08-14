@@ -1,21 +1,35 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Database, KeyRound, Loader2, RefreshCw, Unplug } from "lucide-react";
-import { GROQ_MODELS } from "@/lib/ai/groq";
+import {
+  AI_PROVIDERS,
+  AI_PROVIDER_LIST,
+  getProvider,
+  isAiProvider,
+  isModelForProvider,
+  type AiProviderId,
+} from "@/lib/ai/providers";
 import { DemoBadge } from "../ui/DemoBadge";
 import { DemoCallout } from "../ui/DemoCallout";
 import { DemoCard } from "../ui/DemoCard";
 import { PermissionMatrixTable } from "../roles/PermissionMatrixTable";
 
+type KeyStatus = {
+  hasKey: boolean;
+  keyHint: string | null;
+  maskedKey: string | null;
+};
+
 type ConfigResponse = {
-  provider: string;
+  provider: AiProviderId;
   model: string;
   hasKey: boolean;
   keyHint: string | null;
   maskedKey: string | null;
   temperature: number;
   updatedAt: string | null;
+  keys?: Record<string, KeyStatus>;
   snapshot: {
     storeCount: number;
     syncedAt: string | null;
@@ -54,10 +68,15 @@ function formatWhen(iso: string | null | undefined) {
 export function AiConfigPage() {
   const [data, setData] = useState<ConfigResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [provider, setProvider] = useState<AiProviderId>("groq");
   const [apiKey, setApiKey] = useState("");
-  const [model, setModel] = useState(GROQ_MODELS[0].id);
+  const [model, setModel] = useState(AI_PROVIDERS.groq.defaultModel);
   const [busy, setBusy] = useState<"save" | "test" | "sync" | null>(null);
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const meta = getProvider(provider);
+  const models = meta.models;
+  const keyInfo = data?.keys?.[provider];
 
   const refresh = useCallback(async () => {
     const res = await fetch("/api/ai/config");
@@ -68,12 +87,25 @@ export function AiConfigPage() {
     }
     setLoadError(null);
     setData(json);
-    setModel(json.model || GROQ_MODELS[0].id);
+    const pid = isAiProvider(json.provider) ? json.provider : "groq";
+    setProvider(pid);
+    setModel(
+      isModelForProvider(pid, json.model) ? json.model : getProvider(pid).defaultModel,
+    );
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  function switchProvider(next: AiProviderId) {
+    setProvider(next);
+    setApiKey("");
+    const saved = data?.provider === next ? data.model : null;
+    setModel(
+      saved && isModelForProvider(next, saved) ? saved : getProvider(next).defaultModel,
+    );
+  }
 
   async function save() {
     setBusy("save");
@@ -83,6 +115,7 @@ export function AiConfigPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          provider,
           model,
           ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
         }),
@@ -93,7 +126,7 @@ export function AiConfigPage() {
         return;
       }
       setApiKey("");
-      setNotice({ ok: true, text: "Đã lưu cấu hình Groq." });
+      setNotice({ ok: true, text: `Đã lưu cấu hình ${meta.label}. Chatbot sẽ dùng nhà cung cấp này.` });
       await refresh();
     } catch {
       setNotice({ ok: false, text: "Không kết nối được máy chủ." });
@@ -109,7 +142,10 @@ export function AiConfigPage() {
       const res = await fetch("/api/ai/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
+        body: JSON.stringify({
+          provider,
+          ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
+        }),
       });
       const json = (await res.json()) as { ok?: boolean; message?: string };
       setNotice({ ok: Boolean(json.ok), text: json.message ?? (res.ok ? "OK" : "Thất bại") });
@@ -142,12 +178,70 @@ export function AiConfigPage() {
     }
   }
 
+  const guide = useMemo(() => {
+    if (provider === "gemini") {
+      return (
+        <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-700">
+          <li>
+            Mở{" "}
+            <a
+              href="https://aistudio.google.com/apikey"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-[#1a5c3a] underline"
+            >
+              aistudio.google.com/apikey
+            </a>{" "}
+            — đăng nhập Google. Free tier Gemini không cần thẻ.
+          </li>
+          <li>
+            Bấm <strong>Create API key</strong>. Chọn project Google Cloud có sẵn hoặc tạo project mới.
+          </li>
+          <li>
+            Copy chuỗi bắt đầu bằng <code className="rounded bg-slate-100 px-1">AIza</code>. Dán vào ô
+            key phía trên → Lưu → Kiểm tra kết nối.
+          </li>
+          <li>
+            Model mặc định: <code>gemini-2.5-flash</code> (nhanh, quota miễn phí tốt). Nếu 404, đổi sang{" "}
+            <code>gemini-2.0-flash</code>.
+          </li>
+        </ol>
+      );
+    }
+    return (
+      <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-700">
+        <li>
+          Mở{" "}
+          <a
+            href="https://console.groq.com"
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-[#1a5c3a] underline"
+          >
+            console.groq.com
+          </a>{" "}
+          — đăng nhập Google hoặc GitHub. Free tier không cần thẻ.
+        </li>
+        <li>
+          Vào menu <strong>API Keys</strong> → <strong>Create API Key</strong>. Đặt tên (ví dụ{" "}
+          <code>vinamilk-demo</code>).
+        </li>
+        <li>
+          Copy chuỗi bắt đầu bằng <code className="rounded bg-slate-100 px-1">gsk_</code>. Groq chỉ hiện
+          key một lần.
+        </li>
+        <li>Dán vào ô phía trên → Lưu → Kiểm tra kết nối. Model mặc định: Llama 3.3 70B Versatile.</li>
+      </ol>
+    );
+  }, [provider]);
+
   return (
     <div className="space-y-6">
       <p className="text-sm text-slate-600">
-        Cấu hình Groq cho chatbot trên Admin / Manager / Store Manager. API key được mã hoá AES-256-GCM
-        trong Supabase — client không bao giờ nhận key thô. Demo chưa có đăng nhập: role gửi từ giao
-        diện đang mở; phân quyền vẫn cắt dữ liệu ở server trước khi gửi cho model.
+        Cấu hình chatbot (Groq hoặc Gemini) cho Admin / Manager / Store Manager. Mỗi nhà cung cấp lưu
+        API key riêng, mã hoá AES-256-GCM trong Supabase — đổi provider không xoá key kia. Client không
+        nhận key thô. Demo chưa có đăng nhập: role gửi từ giao diện đang mở; phân quyền vẫn cắt dữ liệu
+        ở server trước khi gửi cho model.
       </p>
 
       {loadError && (
@@ -162,10 +256,46 @@ export function AiConfigPage() {
         </DemoCallout>
       )}
 
+      <DemoCard title="Nhà cung cấp đang dùng">
+        <div className="flex flex-wrap gap-2">
+          {AI_PROVIDER_LIST.map((id) => {
+            const p = AI_PROVIDERS[id];
+            const saved = data?.keys?.[id]?.hasKey;
+            const active = provider === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => switchProvider(id)}
+                className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "border-[#1a5c3a] bg-[#1a5c3a] text-white"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {p.label}
+                {saved ? (
+                  <span className={`ml-2 text-xs ${active ? "text-white/80" : "text-emerald-700"}`}>
+                    có key
+                  </span>
+                ) : (
+                  <span className={`ml-2 text-xs ${active ? "text-white/70" : "text-slate-400"}`}>
+                    chưa có key
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-3 text-xs text-slate-500">
+          Chatbot dùng provider đang chọn sau khi bấm Lưu. Có thể giữ cả hai key và chuyển qua lại.
+        </p>
+      </DemoCard>
+
       <DemoCard
-        title="API key Groq"
+        title={`API key ${meta.label}`}
         action={
-          data?.hasKey ? (
+          keyInfo?.hasKey || (data?.provider === provider && data.hasKey) ? (
             <DemoBadge variant="success">Đã cấu hình</DemoBadge>
           ) : (
             <DemoBadge variant="warning">Chưa có key</DemoBadge>
@@ -175,25 +305,26 @@ export function AiConfigPage() {
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
             <KeyRound className="h-4 w-4" />
-            {data?.hasKey ? (
+            {keyInfo?.hasKey ? (
               <span>
-                Key hiện tại: <span className="font-mono text-slate-800">{data.maskedKey}</span>
+                Key {meta.label}:{" "}
+                <span className="font-mono text-slate-800">{keyInfo.maskedKey}</span>
                 <span className="ml-2 text-xs text-slate-500">
-                  Cập nhật: {formatWhen(data.updatedAt)}
+                  Cập nhật: {formatWhen(data?.updatedAt)}
                 </span>
               </span>
             ) : (
-              <span>Chưa lưu key — chatbot sẽ báo chưa sẵn sàng.</span>
+              <span>Chưa lưu key {meta.label} — chọn provider này rồi dán key.</span>
             )}
           </div>
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-slate-700">
-              {data?.hasKey ? "Thay key mới (để trống nếu giữ key cũ)" : "Dán API key"}
+              {keyInfo?.hasKey ? "Thay key mới (để trống nếu giữ key cũ)" : "Dán API key"}
             </span>
             <input
               type="password"
               autoComplete="off"
-              placeholder="gsk_..."
+              placeholder={meta.keyPlaceholder}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm outline-none focus:border-[#1a5c3a] focus:ring-1 focus:ring-[#1a5c3a]"
@@ -202,7 +333,7 @@ export function AiConfigPage() {
           <div className="flex flex-wrap gap-2">
             <button type="button" className={`${btn} ${primary}`} onClick={() => void save()} disabled={busy !== null}>
               {busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-              Lưu
+              Lưu {meta.label}
             </button>
             <button type="button" className={`${btn} ${outline}`} onClick={() => void test()} disabled={busy !== null}>
               {busy === "test" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unplug className="h-4 w-4" />}
@@ -212,47 +343,25 @@ export function AiConfigPage() {
         </div>
       </DemoCard>
 
-      <DemoCard title="Hướng dẫn lấy API key Groq">
-        <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-700">
-          <li>
-            Mở{" "}
-            <a
-              href="https://console.groq.com"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-[#1a5c3a] underline"
-            >
-              console.groq.com
-            </a>{" "}
-            — đăng nhập Google hoặc GitHub. Free tier không cần thẻ.
-          </li>
-          <li>
-            Vào menu <strong>API Keys</strong> → <strong>Create API Key</strong>. Đặt tên (ví dụ{" "}
-            <code>vinamilk-demo</code>).
-          </li>
-          <li>
-            Copy chuỗi bắt đầu bằng <code className="rounded bg-slate-100 px-1">gsk_</code>. Groq chỉ hiện
-            key một lần.
-          </li>
-          <li>Dán vào ô phía trên → Lưu → Kiểm tra kết nối. Model mặc định: Llama 3.3 70B Versatile.</li>
-        </ol>
+      <DemoCard title={`Hướng dẫn lấy API key ${meta.label}`}>
+        {guide}
         <p className="mt-3 text-xs text-slate-500">
           Docs model:{" "}
-          <a href="https://console.groq.com/docs/models" target="_blank" rel="noreferrer" className="underline">
-            console.groq.com/docs/models
+          <a href={meta.docsUrl} target="_blank" rel="noreferrer" className="underline">
+            {meta.docsUrl}
           </a>
         </p>
       </DemoCard>
 
-      <DemoCard title="Chọn model">
+      <DemoCard title={`Chọn model ${meta.label}`}>
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Model production Groq</span>
+          <span className="mb-1 block font-medium text-slate-700">Model</span>
           <select
             value={model}
             onChange={(e) => setModel(e.target.value)}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#1a5c3a]"
           >
-            {GROQ_MODELS.map((m) => (
+            {models.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.label} — {m.speed} — {m.note}
               </option>
@@ -260,9 +369,9 @@ export function AiConfigPage() {
           </select>
         </label>
         <ul className="mt-3 space-y-1 text-xs text-slate-500">
-          {GROQ_MODELS.map((m) => (
+          {models.map((m) => (
             <li key={m.id}>
-              <code className="rounded bg-slate-100 px-1">{m.id}</code> · {m.speed} · context 131k · {m.note}
+              <code className="rounded bg-slate-100 px-1">{m.id}</code> · {m.speed} · {m.note}
             </li>
           ))}
         </ul>
@@ -273,7 +382,7 @@ export function AiConfigPage() {
           disabled={busy !== null}
         >
           {busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          Lưu model
+          Lưu provider + model
         </button>
       </DemoCard>
 

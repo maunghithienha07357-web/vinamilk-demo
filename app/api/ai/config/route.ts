@@ -1,28 +1,50 @@
 import { NextResponse } from "next/server";
-import { assertEncKey, encryptSecret, keyHint, maskApiKey } from "@/lib/crypto/secretCrypto";
-import { GROQ_MODEL_IDS } from "@/lib/ai/groq";
-import { loadAiConfig, loadRecentLogs, loadSnapshot, saveAiConfig } from "@/lib/ai/store";
+import { assertEncKey, maskApiKey } from "@/lib/crypto/secretCrypto";
+import {
+  AI_PROVIDER_LIST,
+  getProvider,
+  isAiProvider,
+  isModelForProvider,
+  maskedKeyFor,
+  validateApiKey,
+  type AiProviderId,
+} from "@/lib/ai/providers";
+import {
+  activeProvider,
+  cipherFor,
+  hintFor,
+  loadAiConfig,
+  loadRecentLogs,
+  loadSnapshot,
+  saveAiConfig,
+  type AiConfigRow,
+} from "@/lib/ai/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function publicConfig(row: {
-  provider: string;
-  model: string;
-  api_key_cipher: string | null;
-  key_hint: string | null;
-  temperature: number;
-  updated_at: string;
-}) {
-  const hasKey = Boolean(row.api_key_cipher);
+function keyStatus(row: AiConfigRow, provider: AiProviderId) {
+  const hint = hintFor(row, provider);
+  const hasKey = Boolean(cipherFor(row, provider));
   return {
-    provider: row.provider,
-    model: row.model,
     hasKey,
-    keyHint: row.key_hint,
-    maskedKey: hasKey && row.key_hint ? `gsk_••••${row.key_hint}` : null,
+    keyHint: hint,
+    maskedKey: hasKey ? maskedKeyFor(provider, hint) : null,
+  };
+}
+
+function publicConfig(row: AiConfigRow) {
+  const provider = activeProvider(row);
+  const active = keyStatus(row, provider);
+  return {
+    provider,
+    model: row.model,
+    hasKey: active.hasKey,
+    keyHint: active.keyHint,
+    maskedKey: active.maskedKey,
     temperature: Number(row.temperature),
     updatedAt: row.updated_at,
+    keys: Object.fromEntries(AI_PROVIDER_LIST.map((id) => [id, keyStatus(row, id)])),
   };
 }
 
@@ -67,19 +89,35 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     assertEncKey();
-    const body = (await req.json()) as { apiKey?: string; model?: string; temperature?: number };
-    const patch: {
+    const body = (await req.json()) as {
+      apiKey?: string;
       model?: string;
-      api_key_cipher?: string;
-      key_hint?: string;
+      provider?: string;
+      temperature?: number;
+    };
+
+    const provider = isAiProvider(body.provider) ? body.provider : undefined;
+    const patch: {
+      provider?: AiProviderId;
+      model?: string;
+      apiKey?: string;
       temperature?: number;
     } = {};
 
+    if (provider) patch.provider = provider;
+
+    const existing = await loadAiConfig();
+    const pid: AiProviderId = provider ?? (existing ? activeProvider(existing) : "groq");
+
     if (typeof body.model === "string" && body.model.trim()) {
-      if (!GROQ_MODEL_IDS.has(body.model.trim())) {
-        return NextResponse.json({ error: "Model Groq không hợp lệ" }, { status: 400 });
+      const model = body.model.trim();
+      if (!isModelForProvider(pid, model)) {
+        return NextResponse.json(
+          { error: `Model không hợp lệ cho ${getProvider(pid).label}` },
+          { status: 400 },
+        );
       }
-      patch.model = body.model.trim();
+      patch.model = model;
     }
 
     if (typeof body.temperature === "number" && Number.isFinite(body.temperature)) {
@@ -87,30 +125,26 @@ export async function POST(req: Request) {
     }
 
     if (typeof body.apiKey === "string" && body.apiKey.trim()) {
-      const apiKey = body.apiKey.trim();
-      if (!apiKey.startsWith("gsk_")) {
-        return NextResponse.json(
-          { error: "API key Groq phải bắt đầu bằng gsk_" },
-          { status: 400 },
-        );
+      const invalid = validateApiKey(pid, body.apiKey);
+      if (invalid) {
+        return NextResponse.json({ error: invalid }, { status: 400 });
       }
-      patch.api_key_cipher = encryptSecret(apiKey);
-      patch.key_hint = keyHint(apiKey);
+      patch.apiKey = body.apiKey.trim();
+      patch.provider = pid;
     }
 
-    if (!patch.model && !patch.api_key_cipher && patch.temperature === undefined) {
+    if (!patch.provider && !patch.model && !patch.apiKey && patch.temperature === undefined) {
       return NextResponse.json({ error: "Không có thay đổi để lưu" }, { status: 400 });
     }
 
     const saved = await saveAiConfig(patch);
+    const pub = publicConfig(saved);
     return NextResponse.json({
       ok: true,
-      ...publicConfig(saved),
-      maskedPreview: patch.api_key_cipher
-        ? maskApiKey(body.apiKey?.trim() ?? "")
-        : saved.key_hint
-          ? `gsk_••••${saved.key_hint}`
-          : null,
+      ...pub,
+      maskedPreview: patch.apiKey
+        ? maskApiKey(patch.apiKey)
+        : pub.maskedKey,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Không lưu được cấu hình";

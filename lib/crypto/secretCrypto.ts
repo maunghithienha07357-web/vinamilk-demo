@@ -54,7 +54,7 @@ export function maskApiKey(key: string): string {
   const trimmed = key.trim();
   if (!trimmed) return "";
   if (trimmed.length <= 8) return "••••••••";
-  const prefix = trimmed.startsWith("gsk_") ? "gsk_" : "";
+  const prefix = trimmed.startsWith("gsk_") ? "gsk_" : trimmed.startsWith("AIza") ? "AIza" : "";
   return `${prefix}••••${trimmed.slice(-4)}`;
 }
 
