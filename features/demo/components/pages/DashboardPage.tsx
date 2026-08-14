@@ -3,7 +3,10 @@
 import { useRef, useState, type ReactNode } from "react";
 import type { DemoRole } from "../../constants/demoRoles";
 import { DEMO_ROLE_META } from "../../constants/demoRoles";
-import { DEMO_STORE_COUNTS } from "../../constants/demoStores";
+import {
+  DEMO_STORE_COUNTS,
+  MAP_CLUSTER,
+} from "../../constants/demoStores";
 import {
   CLAIM_STORES_DETAIL,
   FUNNEL_STAGE_STORES,
@@ -24,6 +27,7 @@ import { DemoStoreRowList } from "../ui/DemoStoreRowList";
 import { DemoActionButton } from "../ui/DemoActionButton";
 import { DemoCallout } from "../ui/DemoCallout";
 import { DemoExportMenu, STORE_EXPORT_COLUMNS, panelStoresToRows } from "../ui/DemoExportMenu";
+import { StoreMapEmbed } from "../store/StoreMapEmbed";
 
 type PanelKind = "claim" | "suspended" | "new" | "verify" | "funnel" | "reviews";
 
@@ -33,25 +37,25 @@ const STAT_PANELS: Record<
 > = {
   claim: {
     title: "Cửa hàng chưa Claim",
-    subtitle: "Sample 10 / 80 — ưu tiên cửa hàng traffic cao và flagship",
+    subtitle: `${CLAIM_STORES_DETAIL.length} cửa hàng — ưu tiên flagship Q7`,
     rows: CLAIM_STORES_DETAIL,
     note: "Claim = listing chưa thuộc tài khoản GBP Vinamilk. Manager nộp Claim sau khi Store Manager xác nhận địa chỉ.",
   },
   suspended: {
     title: "Cửa hàng Suspended (24h)",
-    subtitle: "12 cảnh báo gần nhất — xử lý trước hạn Google",
+    subtitle: `${SUSPENDED_STORES_DETAIL.length} cảnh báo — xử lý trước hạn Google`,
     rows: SUSPENDED_STORES_DETAIL,
     note: "Suspended thường do N.A.P lệch giấy phép, video không thấy bảng hiệu, hoặc trùng listing. Mở Verification để duyệt bằng chứng.",
   },
   new: {
     title: "Cửa hàng New (vừa import)",
-    subtitle: "Sample 5 / 126 — chờ gán tag GBP và Store Manager",
+    subtitle: `${NEW_STORES_DETAIL.length} cửa hàng vừa import — chờ gán tag GBP`,
     rows: NEW_STORES_DETAIL,
     note: "New = vừa ingest từ Google / Excel. Chưa vào funnel Verify cho đến khi Auto-Tag xong.",
   },
   verify: {
     title: "Cửa hàng đang Verify",
-    subtitle: "Sample 5 / 233 — thiếu bằng chứng hoặc chờ Google",
+    subtitle: `${VERIFY_STORES_DETAIL.length} cửa hàng — thiếu bằng chứng hoặc chờ Google`,
     rows: VERIFY_STORES_DETAIL,
     note: "Verify = đã claim, đang thu thập / nộp bằng chứng. Store Manager tải file; Manager duyệt rồi nộp lên Google.",
   },
@@ -63,10 +67,10 @@ const FUNNEL_EXPORT_COLUMNS = [
 ];
 
 const FUNNEL_EXPORT_ROWS = [
-  { stage: "Tổng cửa hàng", count: "560" },
-  { stage: "Verify", count: "233" },
-  { stage: "Đã nộp bằng chứng", count: "156" },
-  { stage: "Verified", count: "42" },
+  { stage: "Tổng cửa hàng", count: String(DEMO_STORE_COUNTS.total) },
+  { stage: "Verify", count: String(DEMO_STORE_COUNTS.verify) },
+  { stage: "Đã nộp bằng chứng", count: String(FUNNEL_STAGE_STORES["Đã nộp bằng chứng"].length) },
+  { stage: "Verified", count: String(DEMO_STORE_COUNTS.verified) },
 ];
 
 const REVIEW_KPI_COLUMNS = [
@@ -86,7 +90,7 @@ export function DashboardPage({ role }: { role: Extract<DemoRole, "admin" | "man
   const title =
     role === "admin"
       ? "Module 1 — Master Dashboard: cái nhìn toàn cảnh cho Ban Lãnh đạo Vinamilk và PM dự án."
-      : "Dashboard vận hành — Agency PM xem tiến độ 560 cửa hàng. Nhấn số liệu hoặc cột biểu đồ để mở chi tiết.";
+      : "Dashboard vận hành — Agency PM xem tiến độ 5 cửa hàng Giấc Mơ Sữa Việt (Quận 7). Nhấn số liệu hoặc cột biểu đồ để mở chi tiết.";
 
   const verificationHref = `${base}/verification`;
 
@@ -179,6 +183,20 @@ export function DashboardPage({ role }: { role: Extract<DemoRole, "admin" | "man
   return (
     <div className="space-y-6">
       <p className="text-sm text-slate-600">{title}</p>
+
+      <DemoCard title="Bản đồ 5 cửa hàng — cụm Quận 7, TP.HCM">
+        <StoreMapEmbed
+          lat={MAP_CLUSTER.lat}
+          lng={MAP_CLUSTER.lng}
+          name="Cụm cửa hàng Vinamilk Quận 7"
+          zoom={MAP_CLUSTER.zoom}
+          className="h-72 w-full"
+        />
+        <p className="mt-2 text-xs text-slate-500">
+          5 điểm Giấc Mơ Sữa Việt / cửa hàng trải nghiệm quanh Phú Mỹ Hưng — Bùi Bằng Đoàn, Tân Trào,
+          Trần Xuân Soạn, Lâm Văn Bền, Tôn Dật Tiên.
+        </p>
+      </DemoCard>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DemoStatCard

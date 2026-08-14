@@ -1,6 +1,6 @@
 # Vinamilk GBP Demo
 
-Demo UI/UX tĩnh cho hệ thống quản lý **Google Business Profile** của Vinamilk (~560 cửa hàng).
+Demo UI/UX cho hệ thống quản lý **Google Business Profile** của Vinamilk — pilot **5 cửa hàng Giấc Mơ Sữa Việt** cụm Quận 7 (có bản đồ).
 
 - GitHub: https://github.com/maunghithienha07357-web/vinamilk-demo
 - Production: https://vinamilk-demo.vercel.app

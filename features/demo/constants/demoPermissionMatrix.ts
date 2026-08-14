@@ -84,24 +84,18 @@ export const DEMO_SAMPLE_USERS = [
     name: "Admin Vinamilk",
     email: "admin@vinamilk.com.vn",
     role: "admin" as const,
-    stores: "Tất cả 560",
+    stores: "5 cửa hàng Q7",
   },
   {
     name: "PM Agency",
     email: "pm@agency.com",
     role: "manager" as const,
-    stores: "Tất cả 560",
+    stores: "5 cửa hàng Q7",
   },
   {
     name: "Nguyễn Văn A",
-    email: "ch42@vinamilk.com",
+    email: "bbd@vinamilk.com",
     role: "store_manager" as const,
-    stores: "CH 42",
-  },
-  {
-    name: "Trần Thị B",
-    email: "ch128@vinamilk.com",
-    role: "store_manager" as const,
-    stores: "CH 128",
+    stores: "11 Bùi Bằng Đoàn",
   },
 ];

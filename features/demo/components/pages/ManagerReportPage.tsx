@@ -54,7 +54,7 @@ export function ManagerReportPage() {
 
       <DemoCallout variant="info">
         Số liệu mock tuần 11–17/08/2026. Production lấy từ RPC aggregate trên Supabase, không
-        select(*) 560 cửa hàng.
+        select(*) 5 cửa hàng.
       </DemoCallout>
 
       <DemoCard

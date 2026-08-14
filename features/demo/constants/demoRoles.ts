@@ -19,7 +19,7 @@ export const DEMO_ROLE_META: Record<DemoRole, DemoRoleMeta> = {
     basePath: "/demo/admin",
     description:
       "Toàn quyền Master Dashboard, cấu hình OAuth/hạ tầng, phê duyệt và đẩy dữ liệu lên Google, gán role.",
-    scope: "Toàn bộ 560 cửa hàng + hạ tầng (Supabase, R2, Google OAuth)",
+    scope: "5 cửa hàng Giấc Mơ Sữa Việt (cụm Quận 7) + hạ tầng (Supabase, R2, Google OAuth)",
     capabilities: [
       "Xem Master Dashboard toàn hệ thống",
       "Duyệt bằng chứng và nộp Claim / Appeal / Verify lên Google",
@@ -36,8 +36,8 @@ export const DEMO_ROLE_META: Record<DemoRole, DemoRoleMeta> = {
     actor: "Agency PM / Vận hành",
     basePath: "/demo/manager",
     description:
-      "Vận hành 560 cửa hàng: duyệt bằng chứng, tối ưu N.A.P, trả lời đánh giá, đẩy dữ liệu lên Google.",
-    scope: "Toàn bộ 560 cửa hàng — không thấy hạ tầng và quản lý user",
+      "Vận hành 5 cửa hàng cụm Q7: duyệt bằng chứng, tối ưu N.A.P, trả lời đánh giá, đẩy dữ liệu lên Google.",
+    scope: "5 cửa hàng Giấc Mơ Sữa Việt — không thấy hạ tầng và quản lý user",
     capabilities: [
       "Xem Dashboard vận hành",
       "Duyệt bằng chứng và nộp lên Google (đúng PHƯƠNG ÁN THIẾT KẾ UI)",
@@ -57,8 +57,8 @@ export const DEMO_ROLE_META: Record<DemoRole, DemoRoleMeta> = {
     actor: "Quản lý cửa hàng",
     basePath: "/demo/store-manager",
     description:
-      "Giao diện rút gọn — chỉ cửa hàng được gán, tải video mặt tiền và giấy tờ. Magic link, không cần tạo 560 account.",
-    scope: "1 cửa hàng được gán (demo: Vinamilk TP.HCM — CH 42)",
+      "Giao diện rút gọn — chỉ cửa hàng được gán, tải video mặt tiền và giấy tờ.",
+    scope: "1 cửa hàng được gán (demo: Vinamilk Trải nghiệm — 11 Bùi Bằng Đoàn)",
     capabilities: [
       "Xem tổng quan cửa hàng của mình",
       "Tải video mặt tiền + giấy tờ (INSERT evidence)",
@@ -66,7 +66,7 @@ export const DEMO_ROLE_META: Record<DemoRole, DemoRoleMeta> = {
       "Xem đánh giá cửa hàng (chỉ đọc)",
     ],
     restrictions: [
-      "Không thấy dashboard tổng 560 cửa hàng",
+      "Không thấy dashboard tổng 5 cửa hàng",
       "Không Optimizer / Mass Update",
       "Không hạ tầng, không quản lý user",
       "Không trả lời đánh giá (SELECT only trên reviews)",

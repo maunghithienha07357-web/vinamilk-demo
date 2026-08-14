@@ -21,6 +21,7 @@ import { DemoBadge } from "../ui/DemoBadge";
 import { DemoActionButton } from "../ui/DemoActionButton";
 import { DemoDetailPanel } from "../ui/DemoDetailPanel";
 import { DemoExportMenu } from "../ui/DemoExportMenu";
+import { StoreMapEmbed } from "./StoreMapEmbed";
 import { cn } from "@/utils/cn";
 
 type PanelKind = "store" | "progress" | "rating" | "evidence" | "deadline" | "status";
@@ -125,6 +126,10 @@ export function StoreOverviewPanel() {
         </div>
         <p className="mt-4 text-xs text-slate-400">Nhấn vào thẻ để xem thông tin N.A.P</p>
       </button>
+
+      {s.lat != null && s.lng != null && (
+        <StoreMapEmbed lat={s.lat} lng={s.lng} name={s.name} className="h-64 w-full" />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {tiles.map((tile) => {
@@ -263,7 +268,7 @@ export function StoreOverviewPanel() {
         bodyRef={progressRef}
         headerAction={
           <DemoExportMenu
-            title="Tiến độ hồ sơ CH 42"
+            title="Tiến độ hồ sơ Bùi Bằng Đoàn"
             columns={[
               { key: "item", header: "Hạng mục" },
               { key: "status", header: "Trạng thái" },
@@ -305,7 +310,7 @@ export function StoreOverviewPanel() {
         bodyRef={statusRef}
         headerAction={
           <DemoExportMenu
-            title="Timeline GBP CH 42"
+            title="Timeline GBP Bùi Bằng Đoàn"
             columns={[
               { key: "label", header: "Bước" },
               { key: "status", header: "Trạng thái" },
@@ -343,7 +348,7 @@ export function StoreOverviewPanel() {
         bodyRef={ratingRef}
         headerAction={
           <DemoExportMenu
-            title="Đánh giá CH 42"
+            title="Đánh giá Bùi Bằng Đoàn"
             columns={[
               { key: "stars", header: "Sao" },
               { key: "count", header: "Số đánh giá" },
@@ -380,7 +385,7 @@ export function StoreOverviewPanel() {
         bodyRef={evidenceRef}
         headerAction={
           <DemoExportMenu
-            title="Checklist bằng chứng CH 42"
+            title="Checklist bằng chứng Bùi Bằng Đoàn"
             columns={[
               { key: "label", header: "Hạng mục" },
               { key: "status", header: "Trạng thái" },
@@ -427,7 +432,7 @@ export function StoreOverviewPanel() {
         bodyRef={deadlineRef}
         headerAction={
           <DemoExportMenu
-            title="Việc cần làm CH 42"
+            title="Việc cần làm Bùi Bằng Đoàn"
             columns={[
               { key: "title", header: "Việc" },
               { key: "due", header: "Hạn" },

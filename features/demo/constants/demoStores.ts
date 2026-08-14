@@ -19,93 +19,147 @@ export type DemoStore = {
   kanbanStage: KanbanStage;
   syncStatus: SyncStatus;
   googlePlaceId: string;
+  lat: number;
+  lng: number;
+  rating: number;
+  reviewCount: number;
+  oneStarCount: number;
+  evidenceStatus: string;
+  reason?: string;
+  assignedToStoreManager?: boolean;
 };
 
-const REGIONS = ["Miền Bắc", "Miền Trung", "Miền Nam", "Hà Nội", "TP.HCM"];
-const CATEGORIES = [
-  "Cửa hàng sữa",
-  "Siêu thị mini",
-  "Đại lý phân phối",
-  "Cửa hàng tiện lợi",
+/** 5 cửa hàng Giấc Mơ Sữa Việt / Vinamilk Experience — cụm Quận 7, có tọa độ map. */
+export const DEMO_STORES: DemoStore[] = [
+  {
+    id: "store-gmsv-bbd",
+    name: "Vinamilk Trải nghiệm — 11 Bùi Bằng Đoàn",
+    address: "11 Bùi Bằng Đoàn, Tân Hưng, Quận 7, TP.HCM",
+    phone: "028 5413 1111",
+    category: "Cửa hàng trải nghiệm",
+    hours: "8:00 - 21:00",
+    website: "https://www.vinamilk.com.vn",
+    region: "TP.HCM",
+    gbpState: "verify",
+    kanbanStage: "need_evidence",
+    syncStatus: "queued",
+    googlePlaceId: "ChIJ-bbd-q7-vinamilk",
+    lat: 10.7294,
+    lng: 106.7219,
+    rating: 3.4,
+    reviewCount: 38,
+    oneStarCount: 9,
+    evidenceStatus: "Thiếu video mặt tiền",
+    reason: "Hồ sơ Verify — Store Manager đang thu thập bằng chứng",
+    assignedToStoreManager: true,
+  },
+  {
+    id: "store-gmsv-tantrao",
+    name: "Giấc Mơ Sữa Việt Tân Trào — CH40171",
+    address: "10 Tân Trào, Tân Phú, Quận 7, TP.HCM",
+    phone: "028 5416 1010",
+    category: "Cửa hàng sữa",
+    hours: "8:00 - 19:30",
+    website: "https://giacmosuaviet.com.vn",
+    region: "TP.HCM",
+    gbpState: "suspended",
+    kanbanStage: "need_evidence",
+    syncStatus: "failed",
+    googlePlaceId: "ChIJ-tantrao-vinamilk",
+    lat: 10.73205,
+    lng: 106.72148,
+    rating: 3.6,
+    reviewCount: 52,
+    oneStarCount: 7,
+    evidenceStatus: "Cần quay lại video bảng hiệu",
+    reason: "Suspended: N.A.P không khớp giấy phép / video không thấy bảng hiệu",
+  },
+  {
+    id: "store-gmsv-txs",
+    name: "Giấc Mơ Sữa Việt Trần Xuân Soạn",
+    address: "396 Đ. Trần Xuân Soạn, Tân Kiểng, Quận 7, TP.HCM",
+    phone: "028 3775 3960",
+    category: "Cửa hàng sữa",
+    hours: "7:30 - 18:00",
+    website: "https://giacmosuaviet.com.vn",
+    region: "TP.HCM",
+    gbpState: "claim",
+    kanbanStage: "need_evidence",
+    syncStatus: "idle",
+    googlePlaceId: "ChIJ-txs-vinamilk",
+    lat: 10.7471,
+    lng: 106.7059,
+    rating: 0,
+    reviewCount: 0,
+    oneStarCount: 0,
+    evidenceStatus: "Chưa nộp",
+    reason: "Chưa có listing GBP — ưu tiên vì nằm cụm Q7",
+  },
+  {
+    id: "store-gmsv-lvb",
+    name: "Giấc Mơ Sữa Việt Lâm Văn Bền",
+    address: "123 Lâm Văn Bền, Tân Kiểng, Quận 7, TP.HCM",
+    phone: "028 3775 0123",
+    category: "Siêu thị mini",
+    hours: "7:00 - 21:00",
+    website: "https://giacmosuaviet.com.vn",
+    region: "TP.HCM",
+    gbpState: "new",
+    kanbanStage: "need_evidence",
+    syncStatus: "idle",
+    googlePlaceId: "ChIJ-lvb-vinamilk",
+    lat: 10.7415,
+    lng: 106.7148,
+    rating: 0,
+    reviewCount: 0,
+    oneStarCount: 0,
+    evidenceStatus: "Đã import, chờ tag",
+    reason: "Vừa import — chờ gán Store Manager và tag GBP",
+  },
+  {
+    id: "store-gmsv-tdt",
+    name: "Giấc Mơ Sữa Việt Tôn Dật Tiên",
+    address: "101 Tôn Dật Tiên, Tân Phú, Quận 7, TP.HCM",
+    phone: "028 5413 0101",
+    category: "Cửa hàng sữa",
+    hours: "8:00 - 21:00",
+    website: "https://giacmosuaviet.com.vn",
+    region: "TP.HCM",
+    gbpState: "verify",
+    kanbanStage: "pending_google",
+    syncStatus: "success",
+    googlePlaceId: "ChIJ-tdt-vinamilk",
+    lat: 10.7286,
+    lng: 106.7188,
+    rating: 4.3,
+    reviewCount: 19,
+    oneStarCount: 1,
+    evidenceStatus: "Đã nộp đủ — chờ Google",
+    reason: "Verify: đã nộp bằng chứng, chờ Google duyệt",
+  },
 ];
 
-const GBP_DISTRIBUTION: { state: GbpState; count: number }[] = [
-  { state: "claim", count: 80 },
-  { state: "suspended", count: 121 },
-  { state: "new", count: 126 },
-  { state: "verify", count: 233 },
-];
-
-const KANBAN_STAGES: KanbanStage[] = [
-  "need_evidence",
-  "evidence_uploaded",
-  "pending_google",
-  "done",
-];
-
-function seededRandom(seed: number): () => number {
-  let s = seed;
-  return () => {
-    s = (s * 16807 + 0) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-}
-
-function buildGbpStates(): GbpState[] {
-  const states: GbpState[] = [];
-  for (const { state, count } of GBP_DISTRIBUTION) {
-    for (let i = 0; i < count; i++) states.push(state);
-  }
-  return states;
-}
-
-const GBP_STATES = buildGbpStates();
-
-export function generateDemoStores(): DemoStore[] {
-  const rand = seededRandom(42);
-  const stores: DemoStore[] = [];
-
-  for (let i = 0; i < 560; i++) {
-    const num = i + 1;
-    const region = REGIONS[Math.floor(rand() * REGIONS.length)];
-    const gbpState = GBP_STATES[i];
-    const kanbanStage = KANBAN_STAGES[Math.floor(rand() * KANBAN_STAGES.length)];
-    const syncStatuses: SyncStatus[] = ["idle", "success", "success", "success", "failed", "queued"];
-    const syncStatus = syncStatuses[Math.floor(rand() * syncStatuses.length)];
-
-    stores.push({
-      id: `store-${String(num).padStart(4, "0")}`,
-      name: `Vinamilk ${region} — CH ${num}`,
-      address: `${100 + (num % 200)} Đường ${num % 50 + 1}, Quận ${(num % 12) + 1}, ${region}`,
-      phone: `028${String(10000000 + num).slice(0, 8)}`,
-      category: CATEGORIES[num % CATEGORIES.length],
-      hours: "7:00 - 21:00",
-      website: num % 3 === 0 ? `https://vinamilk.com.vn/ch-${num}` : "",
-      region,
-      gbpState,
-      kanbanStage,
-      syncStatus,
-      googlePlaceId: `ChIJ${String(num).padStart(8, "0")}`,
-    });
-  }
-
-  return stores;
-}
-
-export const DEMO_STORES = generateDemoStores();
+export const ASSIGNED_STORE =
+  DEMO_STORES.find((s) => s.assignedToStoreManager) ?? DEMO_STORES[0];
 
 export const DEMO_STORE_COUNTS = {
-  total: 560,
-  claim: 80,
-  suspended: 121,
-  new: 126,
-  verify: 233,
-  verified: 0,
+  total: DEMO_STORES.length,
+  claim: DEMO_STORES.filter((s) => s.gbpState === "claim").length,
+  suspended: DEMO_STORES.filter((s) => s.gbpState === "suspended").length,
+  new: DEMO_STORES.filter((s) => s.gbpState === "new").length,
+  verify: DEMO_STORES.filter((s) => s.gbpState === "verify").length,
+  verified: DEMO_STORES.filter((s) => s.gbpState === "verified").length,
 };
 
 export const DEMO_REVIEW_KPI = {
-  current: 2180,
-  target: 6500,
+  current: DEMO_STORES.reduce((sum, s) => sum + s.reviewCount, 0),
+  target: 200,
+};
+
+export const MAP_CLUSTER = {
+  lat: 10.7357,
+  lng: 106.7166,
+  zoom: 14,
 };
 
 export function getStoresByGbpState(state: GbpState): DemoStore[] {
@@ -117,7 +171,11 @@ export function getStoresByKanbanStage(stage: KanbanStage): DemoStore[] {
 }
 
 export function getSuspendedStoresRecent(): DemoStore[] {
-  return DEMO_STORES.filter((s) => s.gbpState === "suspended").slice(0, 12);
+  return DEMO_STORES.filter((s) => s.gbpState === "suspended");
+}
+
+export function googleMapsEmbedUrl(lat: number, lng: number, zoom = 16): string {
+  return `https://maps.google.com/maps?q=${lat},${lng}&hl=vi&z=${zoom}&output=embed`;
 }
 
 export const GBP_STATE_LABELS: Record<GbpState, string> = {

@@ -18,8 +18,9 @@ export default function DemoImportPage() {
           Data Ingestion — Nhập liệu & Phân loại tự động
         </h1>
         <p className="mt-4 text-slate-600">
-          Import toàn bộ danh sách 560 cửa hàng vào Supabase Postgres. Hệ thống quét qua Google API
-          và dán nhãn (Tagging) phân loại vào 4 nhóm trạng thái.
+          Import 5 cửa hàng Giấc Mơ Sữa Việt (cụm Quận 7, có tọa độ map) vào bảng{" "}
+          <code className="rounded bg-slate-100 px-1">vinamilk_demo_stores</code>. Hệ thống dán nhãn
+          4 nhóm trạng thái GBP.
         </p>
 
         <DemoCard title="Tiến trình import" className="mt-8">
@@ -28,8 +29,8 @@ export default function DemoImportPage() {
               <div className="h-full w-full rounded-full bg-[#1a5c3a]" />
             </div>
             <p className="text-sm text-slate-600">
-              Đã import <strong>560 / 560</strong> cửa hàng — lưu vào bảng{" "}
-              <code className="rounded bg-slate-100 px-1">stores</code> + batch log{" "}
+              Đã import <strong>{DEMO_STORE_COUNTS.total} / {DEMO_STORE_COUNTS.total}</strong> cửa hàng — lưu vào bảng{" "}
+              <code className="rounded bg-slate-100 px-1">vinamilk_demo_stores</code> + batch log{" "}
               <code className="rounded bg-slate-100 px-1">store_import_batches</code>
             </p>
           </div>

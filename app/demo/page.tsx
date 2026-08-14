@@ -15,7 +15,7 @@ export default function DemoCoverPage() {
             </div>
             <div>
               <p className="font-bold text-slate-900">Vinamilk GBP Platform</p>
-              <p className="text-xs text-slate-500">Demo UI/UX — 560 cửa hàng — không ghi dữ liệu</p>
+              <p className="text-xs text-slate-500">Demo UI/UX — 5 cửa hàng Q7 có bản đồ — không ghi dữ liệu</p>
             </div>
           </div>
           <DemoModeBadge />

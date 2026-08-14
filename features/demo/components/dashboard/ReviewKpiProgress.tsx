@@ -17,7 +17,7 @@ export function ReviewKpiProgress({
 
   return (
     <DemoCard
-      title="Review Tracker — KPI 6.500 đánh giá"
+      title="Review Tracker — KPI 200 đánh giá (pilot 5 cửa hàng)"
       contentRef={contentRef}
       action={
         onDetailClick || extraAction ? (

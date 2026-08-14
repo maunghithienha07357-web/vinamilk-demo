@@ -11,7 +11,7 @@ import { DemoBadge } from "../ui/DemoBadge";
 import { DemoActionButton } from "../ui/DemoActionButton";
 import { MassUpdatePanel } from "./MassUpdatePanel";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 10;
 
 export function NapDataGrid({ syncLogHref }: { syncLogHref: string }) {
   const [page, setPage] = useState(0);
@@ -55,7 +55,7 @@ export function NapDataGrid({ syncLogHref }: { syncLogHref: string }) {
           onClick={toggleSelectAll}
           className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm hover:bg-slate-50"
         >
-          {selectAll ? "Bỏ chọn tất cả" : "Chọn tất cả 560"}
+          {selectAll ? "Bỏ chọn tất cả" : `Chọn tất cả ${DEMO_STORES.length}`}
         </button>
         {selected.size > 0 && (
           <span className="text-sm text-slate-600">Đã chọn {selected.size} cửa hàng</span>

@@ -13,7 +13,7 @@ export const DEMO_SCHEMA_TABLES: DemoSchemaTable[] = [
   },
   {
     name: "stores",
-    description: "560 cửa hàng — metadata, không lưu file",
+    description: "5 cửa hàng Giấc Mơ Sữa Việt (cụm Q7) — metadata + lat/lng map",
     keyColumns: ["id", "name", "gbp_state", "workflow_stage", "google_place_id"],
   },
   {

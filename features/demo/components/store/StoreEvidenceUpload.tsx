@@ -1,3 +1,4 @@
+import { STORE_MANAGER_OVERVIEW } from "../../constants/demoPanelData";
 import { DemoCard } from "../ui/DemoCard";
 import { DemoActionButton } from "../ui/DemoActionButton";
 import { DemoCallout } from "../ui/DemoCallout";
@@ -10,7 +11,7 @@ export function StoreEvidenceUpload() {
         trên Supabase. Bản demo không ghi file.
       </DemoCallout>
 
-      <DemoCard title="Evidence Checklist — CH 42">
+      <DemoCard title={`Evidence Checklist — ${STORE_MANAGER_OVERVIEW.name}`}>
         <ul className="space-y-3 text-sm text-slate-700">
           <li className="flex items-center gap-2">
             <input type="checkbox" readOnly className="h-4 w-4" />
@@ -33,7 +34,7 @@ export function StoreEvidenceUpload() {
           <p className="text-sm text-slate-500">
             Kéo thả video/ảnh vào đây
             <br />
-            <span className="text-xs">evidence/store-0042/storefront.mp4 → Cloudflare R2</span>
+            <span className="text-xs">evidence/{STORE_MANAGER_OVERVIEW.id}/storefront.mp4 → Cloudflare R2</span>
           </p>
         </div>
         <DemoActionButton href="/demo/store-manager" variant="primary" className="mt-6 w-full">

@@ -9,7 +9,7 @@ export function UsersPage() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-slate-600">
-        Phân quyền RBAC 3 role. Store Manager dùng magic link upload — không cần tạo 560 account
+        Phân quyền RBAC 3 role. Store Manager dùng magic link upload — không cần tạo hàng trăm account
         thủ công. Gán cửa hàng qua store_assignments.
       </p>
 

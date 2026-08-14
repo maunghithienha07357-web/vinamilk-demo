@@ -1,12 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { STORE_LIST_MANAGER, type PanelStoreRow } from "../../constants/demoPanelData";
+import { useEffect, useRef, useState } from "react";
+import { STORE_LIST_MANAGER, storeToPanelRow, type PanelStoreRow } from "../../constants/demoPanelData";
 import { DemoBadge } from "../ui/DemoBadge";
 import { DemoCallout } from "../ui/DemoCallout";
 import { DemoDetailPanel } from "../ui/DemoDetailPanel";
 import { DemoActionButton } from "../ui/DemoActionButton";
 import { DemoExportMenu, STORE_EXPORT_COLUMNS, panelStoresToRows } from "../ui/DemoExportMenu";
+import { StoreMapEmbed } from "../store/StoreMapEmbed";
+import { MAP_CLUSTER } from "../../constants/demoStores";
+import { fetchVinamilkDemoStores } from "@/lib/supabase/vinamilkStores";
 
 function gbpBadge(state?: string): "default" | "danger" | "warning" | "success" {
   if (state === "Suspended") return "danger";
@@ -17,20 +20,25 @@ function gbpBadge(state?: string): "default" | "danger" | "warning" | "success" 
 
 export function ManagerStorePage() {
   const [selected, setSelected] = useState<PanelStoreRow | null>(null);
+  const [stores, setStores] = useState<PanelStoreRow[]>(STORE_LIST_MANAGER);
   const tableRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    void fetchVinamilkDemoStores().then((rows) => setStores(rows.map((s) => storeToPanelRow(s))));
+  }, []);
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <p className="text-sm text-slate-600">
-          Danh sách 20 cửa hàng mẫu trong phạm vi vận hành. Nhấn một hàng để xem trạng thái GBP, bằng
-          chứng và đánh giá tóm tắt.
+          Danh sách 5 cửa hàng Giấc Mơ Sữa Việt cụm Quận 7. Nhấn một hàng để xem bản đồ, trạng thái
+          GBP, bằng chứng và đánh giá.
         </p>
         <DemoExportMenu
           title="Danh sách cửa hàng vận hành"
           columns={STORE_EXPORT_COLUMNS}
-          rows={panelStoresToRows(STORE_LIST_MANAGER)}
+          rows={panelStoresToRows(stores)}
           captureRef={tableRef}
           fileBase="vinamilk-gbp-stores"
           iconOnly={false}
@@ -38,8 +46,16 @@ export function ManagerStorePage() {
       </div>
 
       <DemoCallout variant="info">
-        Manager thấy toàn bộ 560 cửa hàng (demo hiển thị 20). Không gồm hạ tầng Supabase / R2 / OAuth.
+        Manager thấy 5 cửa hàng Q7 (cùng bảng vinamilk_demo_stores trên Supabase). Không gồm hạ tầng R2 / OAuth.
       </DemoCallout>
+
+      <StoreMapEmbed
+        lat={MAP_CLUSTER.lat}
+        lng={MAP_CLUSTER.lng}
+        name="Cụm cửa hàng Vinamilk Quận 7"
+        zoom={MAP_CLUSTER.zoom}
+        className="h-64 w-full"
+      />
 
       <div ref={tableRef} className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="min-w-full text-left text-sm">
@@ -53,7 +69,7 @@ export function ManagerStorePage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {STORE_LIST_MANAGER.map((store) => (
+            {stores.map((store) => (
               <tr
                 key={store.id}
                 className="cursor-pointer hover:bg-slate-50"
@@ -117,6 +133,9 @@ export function ManagerStorePage() {
                 <dd className="mt-1 text-slate-800">{selected.region}</dd>
               </div>
             </dl>
+            {selected.lat != null && selected.lng != null && (
+              <StoreMapEmbed lat={selected.lat} lng={selected.lng} name={selected.name} />
+            )}
             <div>
               <p className="text-xs text-slate-400">Bằng chứng</p>
               <p className="mt-1 text-slate-800">{selected.evidenceStatus}</p>

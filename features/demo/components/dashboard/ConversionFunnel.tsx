@@ -9,12 +9,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { DEMO_STORE_COUNTS } from "../../constants/demoStores";
+import { FUNNEL_STAGE_STORES } from "../../constants/demoPanelData";
 
 const FUNNEL_DATA = [
-  { stage: "Tổng cửa hàng", count: 560 },
-  { stage: "Verify", count: 233 },
-  { stage: "Đã nộp bằng chứng", count: 156 },
-  { stage: "Verified", count: 42 },
+  { stage: "Tổng cửa hàng", count: DEMO_STORE_COUNTS.total },
+  { stage: "Verify", count: DEMO_STORE_COUNTS.verify },
+  { stage: "Đã nộp bằng chứng", count: FUNNEL_STAGE_STORES["Đã nộp bằng chứng"].length },
+  { stage: "Verified", count: DEMO_STORE_COUNTS.verified },
 ];
 
 export function ConversionFunnel({
@@ -28,7 +30,7 @@ export function ConversionFunnel({
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={FUNNEL_DATA} layout="vertical" margin={{ left: 80, right: 20 }}>
             <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" />
+            <XAxis type="number" allowDecimals={false} />
             <YAxis type="category" dataKey="stage" width={100} tick={{ fontSize: 12 }} />
             <Tooltip />
             <Bar

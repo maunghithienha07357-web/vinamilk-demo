@@ -9,7 +9,7 @@ export function OptimizerPage({ role }: { role: Extract<DemoRole, "admin" | "man
   return (
     <div className="space-y-6">
       <p className="text-sm text-slate-600">
-        Module 3 — Bulk N.A.P & SEO Optimizer: Data Grid 560 cửa hàng, Mass Update, 1-Click Sync.
+        Module 3 — Bulk N.A.P & SEO Optimizer: Data Grid 5 cửa hàng Q7, Mass Update, 1-Click Sync.
         Thay đổi ghi vào bảng nap_change_sets trên Supabase.
       </p>
 

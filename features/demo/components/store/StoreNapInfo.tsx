@@ -3,6 +3,7 @@ import { DemoCard } from "../ui/DemoCard";
 import { DemoCallout } from "../ui/DemoCallout";
 import { DemoActionButton } from "../ui/DemoActionButton";
 import { DemoBadge } from "../ui/DemoBadge";
+import { StoreMapEmbed } from "./StoreMapEmbed";
 
 const FIELDS: { label: string; value: string }[] = [
   { label: "Name", value: STORE_NAP.name },
@@ -23,10 +24,15 @@ export function StoreNapInfo() {
       </p>
 
       <DemoCallout variant="info">
-        Dữ liệu đọc từ bảng stores (RLS: chỉ hàng được gán). Lần sync gần nhất: {STORE_NAP.lastSynced}
+        Dữ liệu đọc từ bảng vinamilk_demo_stores (RLS: public read). Lần sync gần nhất: {STORE_NAP.lastSynced}
       </DemoCallout>
 
-      <DemoCard title="Thông tin N.A.P — CH 42">
+      <DemoCard title={`Thông tin N.A.P — ${STORE_NAP.name}`}>
+        {STORE_NAP.lat != null && STORE_NAP.lng != null && (
+          <div className="mb-4">
+            <StoreMapEmbed lat={STORE_NAP.lat} lng={STORE_NAP.lng} name={STORE_NAP.name} />
+          </div>
+        )}
         <dl className="space-y-4">
           {FIELDS.map((f) => (
             <div key={f.label} className="flex flex-col gap-0.5 border-b border-slate-100 pb-3 last:border-0">

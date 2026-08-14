@@ -12,7 +12,7 @@ export function EarlyWarningWidget({ verificationHref }: { verificationHref: str
       action={
         <span className="flex items-center gap-1 text-xs font-medium text-red-600">
           <AlertTriangle className="h-4 w-4" />
-          12 cảnh báo
+          {stores.length} cảnh báo
         </span>
       }
     >
