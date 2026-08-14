@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "github-vinamilk": {
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "vercel-vinamilk": {
+      "url": "https://mcp.vercel.com"
+    }
+  }
+}
