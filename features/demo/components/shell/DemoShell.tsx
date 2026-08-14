@@ -1,6 +1,7 @@
 "use client";
 
 import type { DemoRole } from "../../constants/demoRoles";
+import { DemoAiChatBubble } from "../ai/DemoAiChatBubble";
 import { DemoHeader } from "./DemoHeader";
 import { DemoSidebar } from "./DemoSidebar";
 import { DemoNextStepBar } from "./DemoNextStepBar";
@@ -24,6 +25,7 @@ export function DemoShell({
           <DemoNextStepBar role={role} />
         </main>
       </div>
+      <DemoAiChatBubble role={role} />
     </div>
   );
 }

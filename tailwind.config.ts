@@ -21,6 +21,8 @@ const config: Config = {
         "brand-leaf-border": "#bddcc4",
         "brand-leaf-border-strong": "#8fc99a",
         "brand-leaf-text": "#1f5c2a",
+        "sidebar-accent": "#D1F2D3",
+        "sidebar-active-text": "#1F2937",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "Be Vietnam Pro", "sans-serif"],
