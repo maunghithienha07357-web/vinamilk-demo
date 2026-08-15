@@ -1,5 +1,5 @@
-import { AiConfigPage } from "@/features/demo/components/pages/AiConfigPage";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <AiConfigPage />;
+  redirect("/demo/superadmin");
 }

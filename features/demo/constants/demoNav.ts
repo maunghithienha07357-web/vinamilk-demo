@@ -2,7 +2,6 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   BookOpen,
-  Bot,
   ClipboardList,
   Cloud,
   Database,
@@ -118,12 +117,6 @@ export const DEMO_ROLE_NAV: Record<DemoRole, DemoNavGroup[]> = {
           label: "Nhật ký đồng bộ",
           href: "/demo/admin/sync-log",
           icon: Activity,
-        },
-        {
-          id: "ai",
-          label: "Cấu hình AI",
-          href: "/demo/admin/ai",
-          icon: Bot,
         },
       ],
     },
@@ -358,5 +351,6 @@ export function getDemoPageTitle(pathname: string, role?: DemoRole | null): stri
   const onboarding = DEMO_ONBOARDING_FLOW.find((s) => s.href === pathname);
   if (onboarding) return onboarding.label;
   if (pathname === "/demo") return "Vinamilk GBP Platform — Demo";
+  if (pathname === "/demo/superadmin") return "Superadmin — Cấu hình AI";
   return "Vinamilk GBP Platform";
 }

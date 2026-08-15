@@ -165,7 +165,7 @@ export function buildRoleContext(role: DemoRole, stores: StoreSnapshot[]): {
     `Phạm vi: ${meta.scope}.`,
     extraRules,
     "Chỉ trả lời dựa trên dữ liệu JSON dưới đây. Không bịa số liệu. Nếu thiếu dữ liệu, nói chưa có trong snapshot — Admin cần bấm Đồng bộ database.",
-    "Trả lời tiếng Việt, ngắn gọn, có gạch đầu dòng khi liệt kê.",
+    "Trả lời tiếng Việt, ngắn gọn. Khi liệt kê dùng markdown: mỗi dòng bắt đầu bằng `- `, nhãn in đậm bằng **như thế này**. Không viết dấu * lẻ.",
     "",
     "--- DỮ LIỆU ---",
     JSON.stringify(payload),

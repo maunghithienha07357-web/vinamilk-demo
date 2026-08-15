@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { isSuperadminRequest, unauthorized } from "@/lib/ai/superadminAuth";
 import { fetchStoresFromDb, saveSnapshot } from "@/lib/ai/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST() {
+export async function POST(req: Request) {
+  if (!isSuperadminRequest(req)) return unauthorized();
   try {
     const stores = await fetchStoresFromDb();
     if (!stores.length) {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bot, Loader2, Send, X } from "lucide-react";
 import type { DemoRole } from "../../constants/demoRoles";
 import { DEMO_ROLE_META } from "../../constants/demoRoles";
+import { ChatMarkdown } from "./ChatMarkdown";
 
 type Msg = { role: "user" | "assistant"; content: string; error?: boolean };
 
@@ -98,7 +99,7 @@ export function DemoAiChatPanel({
         const json = (await res.json()) as { error?: string; code?: string };
         const extra =
           json.code === "NOT_CONFIGURED" && role === "admin"
-            ? " Vào trang Cấu hình AI để nhập key."
+            ? " Vào /demo/superadmin để nhập key."
             : "";
         setMessages((prev) => {
           const next = [...prev];
@@ -186,11 +187,9 @@ export function DemoAiChatPanel({
                 {q}
               </button>
             ))}
-            {role === "admin" && (
-              <Link href="/demo/admin/ai" className="block text-xs text-[#1a5c3a] underline">
-                Cấu hình API key & đồng bộ database
-              </Link>
-            )}
+            <Link href="/demo/superadmin" className="block text-xs text-[#1a5c3a] underline">
+              Cấu hình AI (Superadmin)
+            </Link>
           </div>
         )}
         {messages.map((m, i) => (
@@ -201,10 +200,18 @@ export function DemoAiChatPanel({
                 ? "ml-8 rounded-xl bg-[#1a5c3a] px-3 py-2 text-sm text-white"
                 : m.error
                   ? "mr-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
-                  : "mr-4 rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-800 whitespace-pre-wrap"
+                  : "mr-4 rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-800"
             }
           >
-            {m.content || (sending && i === messages.length - 1 ? "…" : "")}
+            {m.role === "assistant" && !m.error ? (
+              m.content ? (
+                <ChatMarkdown text={m.content} />
+              ) : sending && i === messages.length - 1 ? (
+                "…"
+              ) : null
+            ) : (
+              m.content || (sending && i === messages.length - 1 ? "…" : "")
+            )}
           </div>
         ))}
       </div>

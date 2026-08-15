@@ -7,12 +7,14 @@ import {
   type AiProviderId,
 } from "@/lib/ai/providers";
 import { testProviderKey } from "@/lib/ai/openaiCompat";
+import { isSuperadminRequest, unauthorized } from "@/lib/ai/superadminAuth";
 import { activeProvider, cipherFor, loadAiConfig, saveAiConfig } from "@/lib/ai/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  if (!isSuperadminRequest(req)) return unauthorized();
   try {
     let apiKey = "";
     let provider: AiProviderId | undefined;

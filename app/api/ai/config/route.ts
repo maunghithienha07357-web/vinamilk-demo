@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { assertEncKey, maskApiKey } from "@/lib/crypto/secretCrypto";
+import { isSuperadminRequest, unauthorized } from "@/lib/ai/superadminAuth";
 import {
   AI_PROVIDER_LIST,
   getProvider,
@@ -49,7 +50,8 @@ function publicConfig(row: AiConfigRow) {
   };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!isSuperadminRequest(req)) return unauthorized();
   try {
     const [config, snapshot, logs] = await Promise.all([
       loadAiConfig(),
@@ -88,6 +90,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (!isSuperadminRequest(req)) return unauthorized();
   try {
     const body = (await req.json()) as {
       apiKey?: string;

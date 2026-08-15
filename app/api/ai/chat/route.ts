@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          "Chat AI chưa sẵn sàng: chưa lưu được API key vào database. Vào Cấu hình AI, dán key Gemini (AIza…) hoặc Groq (gsk_…), rồi bấm Kiểm tra kết nối — hệ thống sẽ tự lưu key.",
+          "Chat AI chưa sẵn sàng: chưa lưu được API key. Vào /demo/superadmin, đăng nhập Superadmin, dán key Gemini hoặc Groq, rồi bấm Kiểm tra kết nối.",
         code: "NOT_CONFIGURED",
       },
       { status: 400 },
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
   if (!stores.length) {
     return NextResponse.json(
       {
-        error: "Chưa có dữ liệu cửa hàng. Admin hãy bấm Đồng bộ database trên trang Cấu hình AI.",
+        error: "Chưa có dữ liệu cửa hàng. Superadmin hãy đồng bộ database tại /demo/superadmin.",
         code: "NO_SNAPSHOT",
       },
       { status: 400 },
