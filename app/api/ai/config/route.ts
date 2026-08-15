@@ -3,6 +3,7 @@ import { assertEncKey, maskApiKey } from "@/lib/crypto/secretCrypto";
 import {
   AI_PROVIDER_LIST,
   getProvider,
+  inferProviderFromKey,
   isAiProvider,
   isModelForProvider,
   maskedKeyFor,
@@ -88,7 +89,6 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    assertEncKey();
     const body = (await req.json()) as {
       apiKey?: string;
       model?: string;
@@ -125,12 +125,26 @@ export async function POST(req: Request) {
     }
 
     if (typeof body.apiKey === "string" && body.apiKey.trim()) {
-      const invalid = validateApiKey(pid, body.apiKey);
+      assertEncKey();
+      const inferred = inferProviderFromKey(body.apiKey);
+      const keyProvider = inferred ?? pid;
+      const invalid = validateApiKey(keyProvider, body.apiKey);
       if (invalid) {
         return NextResponse.json({ error: invalid }, { status: 400 });
       }
       patch.apiKey = body.apiKey.trim();
-      patch.provider = pid;
+      patch.provider = keyProvider;
+    }
+
+    const willUse = patch.provider ?? pid;
+    const existingCipher = existing ? cipherFor(existing, willUse) : null;
+    if (!patch.apiKey && !existingCipher && (patch.provider || patch.model)) {
+      return NextResponse.json(
+        {
+          error: `Chưa lưu API key ${getProvider(willUse).label}. Dán key vào ô rồi bấm Kiểm tra kết nối (sẽ tự lưu), không chỉ chọn provider/model.`,
+        },
+        { status: 400 },
+      );
     }
 
     if (!patch.provider && !patch.model && !patch.apiKey && patch.temperature === undefined) {

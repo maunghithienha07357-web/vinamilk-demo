@@ -59,6 +59,24 @@ export function hintFor(row: AiConfigRow, provider: AiProviderId): string | null
   return row.groq_key_hint ?? (row.provider === "groq" ? row.key_hint : null);
 }
 
+export function resolveChatCredentials(row: AiConfigRow): {
+  provider: AiProviderId;
+  cipher: string;
+  model: string;
+} | null {
+  const preferred = activeProvider(row);
+  const order: AiProviderId[] = preferred === "gemini" ? ["gemini", "groq"] : ["groq", "gemini"];
+  for (const id of order) {
+    const cipher = cipherFor(row, id);
+    if (!cipher) continue;
+    const model = isModelForProvider(id, row.model)
+      ? row.model
+      : getProvider(id).defaultModel;
+    return { provider: id, cipher, model };
+  }
+  return null;
+}
+
 export async function loadAiConfig(): Promise<AiConfigRow | null> {
   const supabase = createServiceClient();
   const { data, error } = await supabase

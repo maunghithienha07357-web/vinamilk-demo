@@ -118,14 +118,22 @@ export function isModelForProvider(provider: AiProviderId, model: string): boole
   return AI_PROVIDERS[provider].models.some((m) => m.id === model);
 }
 
+export function inferProviderFromKey(apiKey: string): AiProviderId | null {
+  const trimmed = apiKey.trim();
+  if (trimmed.startsWith("gsk_")) return "groq";
+  if (trimmed.startsWith("AIza")) return "gemini";
+  return null;
+}
+
 export function validateApiKey(provider: AiProviderId, apiKey: string): string | null {
   const trimmed = apiKey.trim();
   if (!trimmed) return "Thiếu API key";
+  if (trimmed.length < 16) return "API key quá ngắn";
   if (provider === "groq" && !trimmed.startsWith("gsk_")) {
     return "API key Groq phải bắt đầu bằng gsk_";
   }
-  if (provider === "gemini" && !trimmed.startsWith("AIza")) {
-    return "API key Gemini thường bắt đầu bằng AIza — lấy tại aistudio.google.com/apikey";
+  if (provider === "gemini" && trimmed.startsWith("gsk_")) {
+    return "Đây là key Groq. Chọn tab Groq, hoặc dán key Gemini từ aistudio.google.com/apikey";
   }
   return null;
 }

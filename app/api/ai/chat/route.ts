@@ -4,11 +4,10 @@ import { getProvider } from "@/lib/ai/providers";
 import { AiProviderError, streamProviderChat } from "@/lib/ai/openaiCompat";
 import { buildRoleContext, isDemoRole } from "@/lib/ai/roleContext";
 import {
-  activeProvider,
-  cipherFor,
   insertChatLog,
   loadAiConfig,
   loadStoresForChat,
+  resolveChatCredentials,
 } from "@/lib/ai/store";
 
 export const runtime = "nodejs";
@@ -46,26 +45,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 
-  const provider = config ? activeProvider(config) : "groq";
-  const label = getProvider(provider).label;
-  const cipher = config ? cipherFor(config, provider) : null;
-
-  if (!cipher) {
+  const creds = config ? resolveChatCredentials(config) : null;
+  if (!creds) {
     return NextResponse.json(
       {
-        error: `Chat AI chưa sẵn sàng. Admin cần nhập API key ${label} trên trang Cấu hình AI.`,
+        error:
+          "Chat AI chưa sẵn sàng: chưa lưu được API key vào database. Vào Cấu hình AI, dán key Gemini (AIza…) hoặc Groq (gsk_…), rồi bấm Kiểm tra kết nối — hệ thống sẽ tự lưu key.",
         code: "NOT_CONFIGURED",
       },
       { status: 400 },
     );
   }
 
+  const { provider, cipher, model } = creds;
+  const label = getProvider(provider).label;
+
   let apiKey: string;
   try {
     apiKey = decryptSecret(cipher);
   } catch {
     return NextResponse.json(
-      { error: "Không giải mã được API key. Kiểm tra VINAMILK_AI_ENC_KEY trên server." },
+      { error: "Không giải mã được API key. Kiểm tra VINAMILK_AI_ENC_KEY trên server (Vercel + local phải cùng một key)." },
       { status: 500 },
     );
   }
@@ -91,7 +91,6 @@ export async function POST(req: Request) {
   const { system } = buildRoleContext(body.role, stores);
   const encoder = new TextEncoder();
   const started = Date.now();
-  const model = config!.model;
   const role = body.role;
   const temperature = Number(config!.temperature ?? 0.3);
 

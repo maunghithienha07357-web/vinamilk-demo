@@ -120,13 +120,19 @@ export function AiConfigPage() {
           ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
         }),
       });
-      const json = (await res.json()) as { error?: string; ok?: boolean };
+      const json = (await res.json()) as { error?: string; ok?: boolean; hasKey?: boolean };
       if (!res.ok) {
         setNotice({ ok: false, text: json.error ?? "Lưu thất bại" });
         return;
       }
       setApiKey("");
-      setNotice({ ok: true, text: `Đã lưu cấu hình ${meta.label}. Chatbot sẽ dùng nhà cung cấp này.` });
+      const savedKey = Boolean(json.hasKey);
+      setNotice({
+        ok: savedKey,
+        text: savedKey
+          ? `Đã lưu key ${meta.label}. Chatbot sẵn sàng.`
+          : `Đã chọn ${meta.label} nhưng CHƯA có key trong database. Dán key rồi bấm Kiểm tra kết nối.`,
+      });
       await refresh();
     } catch {
       setNotice({ ok: false, text: "Không kết nối được máy chủ." });
@@ -144,11 +150,16 @@ export function AiConfigPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider,
+          model,
           ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
         }),
       });
-      const json = (await res.json()) as { ok?: boolean; message?: string };
+      const json = (await res.json()) as { ok?: boolean; message?: string; saved?: boolean };
       setNotice({ ok: Boolean(json.ok), text: json.message ?? (res.ok ? "OK" : "Thất bại") });
+      if (json.ok && json.saved) {
+        setApiKey("");
+        await refresh();
+      }
     } catch {
       setNotice({ ok: false, text: "Không kết nối được máy chủ." });
     } finally {
@@ -247,6 +258,14 @@ export function AiConfigPage() {
       {loadError && (
         <DemoCallout variant="warning" title="Không tải được cấu hình">
           {loadError}
+        </DemoCallout>
+      )}
+
+      {data && !data.hasKey && (
+        <DemoCallout variant="warning" title="Chưa lưu API key — chatbot chưa chạy được">
+          Hiện chỉ đang chọn {getProvider(data.provider).label} / {data.model}, chưa có key trong
+          Supabase. Dán key Gemini (AIza…) hoặc Groq (gsk_…) vào ô bên dưới rồi bấm{" "}
+          <strong>Kiểm tra kết nối</strong> — hệ thống sẽ tự lưu key.
         </DemoCallout>
       )}
 
