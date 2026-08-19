@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { ChevronRight, FileText, ImagePlus, Video } from "lucide-react";
+import { ChevronRight, FileText, ImagePlus, Upload, Video, X } from "lucide-react";
 import {
   STORE_EVIDENCE_GOOGLE_ITEMS,
   STORE_EVIDENCE_INTERNAL_ITEMS,
@@ -13,18 +13,42 @@ import { DemoActionButton } from "../ui/DemoActionButton";
 import { cn } from "@/utils/cn";
 
 type LocalFile = { name: string; url: string; type: string };
+type EvidenceTab = "google" | "internal";
 
 export function StoreEvidenceUpload() {
   const inputRef = useRef<HTMLInputElement>(null);
   const pendingIdRef = useRef<string | null>(null);
   const objectUrlsRef = useRef<string[]>([]);
   const [localFiles, setLocalFiles] = useState<Record<string, LocalFile>>({});
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [tab, setTab] = useState<EvidenceTab>("google");
 
   useEffect(() => {
     return () => {
       objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
+
+  useEffect(() => {
+    if (!popupOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setPopupOpen(false);
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [popupOpen]);
+
+  function openPopup(nextTab: EvidenceTab = "google") {
+    setTab(nextTab);
+    setPopupOpen(true);
+  }
 
   function openPicker(item: EvidenceUploadItem) {
     const input = inputRef.current;
@@ -76,53 +100,135 @@ export function StoreEvidenceUpload() {
 
       <EvidenceProcessStepper />
 
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <button
+          type="button"
+          onClick={() => openPopup("google")}
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1a5c3a] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#247a32]"
+        >
+          <Upload className="h-4 w-4" />
+          Tải minh chứng
+        </button>
+        <DemoActionButton href="/demo/store-manager" variant="outline" className="flex-1">
+          Gửi bằng chứng
+        </DemoActionButton>
+      </div>
+
       <p className="text-center text-xs text-slate-400">
         Bản demo không ghi file — chọn ảnh/video chỉ xem trước trên máy.
       </p>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-800">
-            Thu thập minh chứng — {STORE_MANAGER_OVERVIEW.name}
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Bạn có thể quản lý ảnh, video và tài liệu do cửa hàng tải lên. Ưu tiên hoàn tất nhóm A
-            trước khi gửi.
+      {popupOpen && (
+        <EvidenceUploadPopup
+          tab={tab}
+          onTabChange={setTab}
+          onClose={() => setPopupOpen(false)}
+          localFiles={localFiles}
+          onAdd={openPicker}
+        />
+      )}
+    </div>
+  );
+}
+
+function EvidenceUploadPopup({
+  tab,
+  onTabChange,
+  onClose,
+  localFiles,
+  onAdd,
+}: {
+  tab: EvidenceTab;
+  onTabChange: (tab: EvidenceTab) => void;
+  onClose: () => void;
+  localFiles: Record<string, LocalFile>;
+  onAdd: (item: EvidenceUploadItem) => void;
+}) {
+  const googleTabLabel = `Thu thập minh chứng — ${STORE_MANAGER_OVERVIEW.name}`;
+  const items = tab === "google" ? STORE_EVIDENCE_GOOGLE_ITEMS : STORE_EVIDENCE_INTERNAL_ITEMS;
+  const optional = tab === "internal";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        aria-label="Đóng popup"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="evidence-popup-title"
+        className="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+          <div className="min-w-0">
+            <h2 id="evidence-popup-title" className="font-semibold text-slate-900">
+              Tải minh chứng
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Bạn có thể quản lý ảnh, video và tài liệu do cửa hàng tải lên.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 hover:bg-slate-100"
+            aria-label="Đóng"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="border-b border-slate-100 px-5 py-3">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => onTabChange("google")}
+              className={cn(
+                "rounded-full px-4 py-2 text-left text-sm font-medium transition-colors",
+                tab === "google"
+                  ? "bg-[#1a5c3a] text-white"
+                  : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+              )}
+            >
+              {googleTabLabel}
+            </button>
+            <button
+              type="button"
+              onClick={() => onTabChange("internal")}
+              className={cn(
+                "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                tab === "internal"
+                  ? "bg-[#1a5c3a] text-white"
+                  : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+              )}
+            >
+              Minh chứng nội bộ hỗ trợ
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5">
+          <p className="mb-4 text-sm text-slate-500">
+            {tab === "google"
+              ? "Ưu tiên hoàn tất nhóm A theo yêu cầu của Google trước khi gửi."
+              : "Tùy chọn — nộp khi Manager hoặc Google yêu cầu bổ sung."}
           </p>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {items.map((item) => (
+              <UploadCard
+                key={item.id}
+                item={item}
+                localFile={localFiles[item.id]}
+                onAdd={() => onAdd(item)}
+                optional={optional}
+              />
+            ))}
+          </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {STORE_EVIDENCE_GOOGLE_ITEMS.map((item) => (
-            <UploadCard
-              key={item.id}
-              item={item}
-              localFile={localFiles[item.id]}
-              onAdd={() => openPicker(item)}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-800">Minh chứng nội bộ hỗ trợ</h2>
-          <p className="mt-1 text-sm text-slate-500">Tùy chọn — nộp khi Manager hoặc Google yêu cầu bổ sung.</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {STORE_EVIDENCE_INTERNAL_ITEMS.map((item) => (
-            <UploadCard
-              key={item.id}
-              item={item}
-              localFile={localFiles[item.id]}
-              onAdd={() => openPicker(item)}
-              optional
-            />
-          ))}
-        </div>
-      </section>
-
-      <DemoActionButton href="/demo/store-manager" variant="primary" className="w-full">
-        Gửi bằng chứng
-      </DemoActionButton>
+      </div>
     </div>
   );
 }
