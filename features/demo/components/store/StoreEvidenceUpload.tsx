@@ -100,16 +100,16 @@ export function StoreEvidenceUpload() {
 
       <EvidenceProcessStepper />
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex justify-end gap-2">
         <button
           type="button"
           onClick={() => openPopup("google")}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1a5c3a] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#247a32]"
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#1a5c3a] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#247a32]"
         >
-          <Upload className="h-4 w-4" />
+          <Upload className="h-3.5 w-3.5" />
           Tải minh chứng
         </button>
-        <DemoActionButton href="/demo/store-manager" variant="outline" className="flex-1">
+        <DemoActionButton href="/demo/store-manager" variant="outline" className="rounded-lg px-3 py-1.5 text-xs">
           Gửi bằng chứng
         </DemoActionButton>
       </div>
@@ -144,7 +144,6 @@ function EvidenceUploadPopup({
   localFiles: Record<string, LocalFile>;
   onAdd: (item: EvidenceUploadItem) => void;
 }) {
-  const googleTabLabel = `Thu thập minh chứng — ${STORE_MANAGER_OVERVIEW.name}`;
   const items = tab === "google" ? STORE_EVIDENCE_GOOGLE_ITEMS : STORE_EVIDENCE_INTERNAL_ITEMS;
   const optional = tab === "internal";
 
@@ -182,24 +181,25 @@ function EvidenceUploadPopup({
         </div>
 
         <div className="border-b border-slate-100 px-5 py-3">
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <p className="text-sm font-medium text-slate-800">{STORE_MANAGER_OVERVIEW.name}</p>
+          <div className="mt-2 flex justify-start gap-2">
             <button
               type="button"
               onClick={() => onTabChange("google")}
               className={cn(
-                "rounded-full px-4 py-2 text-left text-sm font-medium transition-colors",
+                "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                 tab === "google"
                   ? "bg-[#1a5c3a] text-white"
                   : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
               )}
             >
-              {googleTabLabel}
+              Thu thập minh chứng
             </button>
             <button
               type="button"
               onClick={() => onTabChange("internal")}
               className={cn(
-                "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                 tab === "internal"
                   ? "bg-[#1a5c3a] text-white"
                   : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
@@ -227,6 +227,12 @@ function EvidenceUploadPopup({
               />
             ))}
           </div>
+        </div>
+
+        <div className="flex justify-end border-t border-slate-200 px-5 py-3">
+          <DemoActionButton href="/demo/store-manager" variant="primary" className="rounded-lg px-3 py-1.5 text-xs">
+            Gửi bằng chứng
+          </DemoActionButton>
         </div>
       </div>
     </div>
