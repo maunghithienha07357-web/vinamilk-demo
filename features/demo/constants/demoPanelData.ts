@@ -156,6 +156,149 @@ export const STORE_EVIDENCE_ITEMS = [
   },
 ];
 
+export type EvidenceUploadKind = "image" | "video" | "file";
+
+export type EvidenceUploadItem = {
+  id: string;
+  title: string;
+  description: string;
+  actionLabel: string;
+  accept: string;
+  kind: EvidenceUploadKind;
+  status: "submitted" | "missing";
+  file: string | null;
+  required: boolean;
+};
+
+export const STORE_EVIDENCE_GOOGLE_ITEMS: EvidenceUploadItem[] = [
+  {
+    id: "storefront",
+    title: "Ảnh tổng quan mặt tiền điểm bán",
+    description:
+      "Giúp doanh nghiệp tạo ấn tượng tốt ngay từ ban đầu bằng ảnh mặt tiền chất lượng cao, nhìn rõ cửa hàng từ đường.",
+    actionLabel: "Thêm ảnh",
+    accept: "image/*",
+    kind: "image",
+    status: "missing",
+    file: null,
+    required: true,
+  },
+  {
+    id: "signage",
+    title: "Ảnh bảng hiệu cố định gắn tại cửa hàng",
+    description: "Ảnh bảng hiệu cố định để khách hàng nhận ra điểm bán ngay lập tức trên Google.",
+    actionLabel: "Thêm ảnh",
+    accept: "image/*",
+    kind: "image",
+    status: "submitted",
+    file: `evidence/${ASSIGNED_STORE.id}/bang-hieu.jpg`,
+    required: true,
+  },
+  {
+    id: "interior",
+    title: "Ảnh không gian bên trong cửa hàng",
+    description:
+      "Giới thiệu không gian cơ sở kinh doanh giúp cửa hàng nổi bật và thu hút khách hàng ở gần.",
+    actionLabel: "Thêm ảnh",
+    accept: "image/*",
+    kind: "image",
+    status: "submitted",
+    file: `evidence/${ASSIGNED_STORE.id}/noi-that.jpg`,
+    required: true,
+  },
+  {
+    id: "video",
+    title: "Video xác minh theo yêu cầu của Google",
+    description: "Quay video liên tục 15–30 giây: đường phố → bảng hiệu → cửa vào. Bắt buộc để nộp hồ sơ.",
+    actionLabel: "Thêm video",
+    accept: "video/*",
+    kind: "video",
+    status: "missing",
+    file: null,
+    required: true,
+  },
+  {
+    id: "license",
+    title: "Giấy phép kinh doanh",
+    description: "Bản scan hoặc ảnh rõ nét giấy phép kinh doanh, khớp tên và địa chỉ N.A.P trên hồ sơ.",
+    actionLabel: "Thêm file",
+    accept: "image/*,.pdf",
+    kind: "file",
+    status: "submitted",
+    file: `evidence/${ASSIGNED_STORE.id}/gpkd.pdf`,
+    required: true,
+  },
+];
+
+export const STORE_EVIDENCE_INTERNAL_ITEMS: EvidenceUploadItem[] = [
+  {
+    id: "legal",
+    title: "Tài liệu pháp lý của doanh nghiệp",
+    description: "Giấy tờ pháp lý bổ sung nếu Google hoặc Manager yêu cầu đối chiếu.",
+    actionLabel: "Thêm file",
+    accept: "image/*,.pdf",
+    kind: "file",
+    status: "missing",
+    file: null,
+    required: false,
+  },
+  {
+    id: "branding",
+    title: "Biển hiệu, nhận diện tại điểm bán",
+    description: "Ảnh nhận diện thương hiệu tại điểm bán — banner, decal, standee nếu có.",
+    actionLabel: "Thêm ảnh",
+    accept: "image/*",
+    kind: "image",
+    status: "missing",
+    file: null,
+    required: false,
+  },
+  {
+    id: "menu",
+    title: "Ấn phẩm thương hiệu, thực đơn (nếu có)",
+    description: "Menu, brochure hoặc ấn phẩm in ấn tại cửa hàng để hỗ trợ đối chiếu nhận diện.",
+    actionLabel: "Thêm ảnh",
+    accept: "image/*,.pdf",
+    kind: "file",
+    status: "missing",
+    file: null,
+    required: false,
+  },
+  {
+    id: "invoice",
+    title: "Hóa đơn, chứng từ hỗ trợ (nếu phù hợp)",
+    description: "Hóa đơn hoặc chứng từ liên quan điểm bán khi cần bổ sung hồ sơ.",
+    actionLabel: "Thêm file",
+    accept: "image/*,.pdf",
+    kind: "file",
+    status: "missing",
+    file: null,
+    required: false,
+  },
+  {
+    id: "poa",
+    title: "Văn bản ủy quyền xử lý (nếu cần)",
+    description: "Giấy ủy quyền nếu người nộp hồ sơ không phải chủ giấy phép.",
+    actionLabel: "Thêm file",
+    accept: "image/*,.pdf",
+    kind: "file",
+    status: "missing",
+    file: null,
+    required: false,
+  },
+];
+
+export const STORE_EVIDENCE_PROCESS_STEPS = {
+  currentIndex: 1,
+  steps: [
+    "Chưa sẵn sàng",
+    "Thu thập minh chứng",
+    "Kiểm định minh chứng",
+    "Minh chứng đạt",
+    "Sẵn sàng xử lý",
+  ],
+};
+
 export const STORE_PENDING_TASKS = [
   {
     id: "t1",
